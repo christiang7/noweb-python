@@ -3,7 +3,7 @@ Text creation time: [Zettelkasten:2021:10:23]() Modification time: [Zettelkasten
 
 GitHub - wware/noweb.py: A python script that extracts code from a literate programming document in "noweb" format.
 
-<https://github.com/wware/noweb.py>
+https://github.com/wware/noweb.py
 
 Using noweb for literate programming.
 
@@ -69,25 +69,25 @@ This shows our command-line arguments. So let's grab those.
 ```python
 {{Parsing the command-line arguments}}=
 parser = argparse.ArgumentParser(
-    prog=os.path.basename(__file__),
-    formatter_class=argparse.RawDescriptionHelpFormatter,
-    description=__doc__
+	prog=os.path.basename(__file__),
+	formatter_class=argparse.RawDescriptionHelpFormatter,
+	description=__doc__
 )
 parser.add_argument(
-    'filename', metavar='filename', nargs=1,
-    help='the source file from which to extract')
+	'filename', metavar='filename', nargs=1,
+	help='the source file from which to extract')
 parser.add_argument(
-    '--ref', '-R',
-    required=True,
-    help='the root chunk to be extracted',
+	'--ref', '-R',
+	required=True,
+	help='the root chunk to be extracted',
 )
 parser.add_argument(
-    '--out', '-o',
-    help='specify an output file',
+	'--out', '-o',
+	help='specify an output file',
 )
 parser.add_argument(
-    '--exectuable', '-x',
-    help='if an output file was specified, chmod +x that file',
+	'--exectuable', '-x',
+	help='if an output file was specified, chmod +x that file',
 )
 opts = parser.parse_args()
 outputChunkName = opts.ref
@@ -164,17 +164,17 @@ OPEN = "{{"
 CLOSE = "}}"
 TAGNAME = "([A-Za-z][-_\\.: A-Za-z0-9]+)"
 for line in file:
-    match = re.match(OPEN + TAGNAME + CLOSE + "=", line)
-    if match:
-        chunkName = match.group(1)
-        if not chunkName in chunks:
-            chunks[chunkName] = []
-    else:
-        match = re.match("@", line)
-        if match:
-            chunkName = None
-        elif chunkName:
-            chunks[chunkName].append(line)
+	match = re.match(OPEN + TAGNAME + CLOSE + "=", line)
+	if match:
+		chunkName = match.group(1)
+		if not chunkName in chunks:
+			chunks[chunkName] = []
+	else:
+		match = re.match("@", line)
+		if match:
+			chunkName = None
+		elif chunkName:
+			chunks[chunkName].append(line)
 @
 ```
 
@@ -207,15 +207,15 @@ indentation at each level.
 ```python
 {{Recursively expanding the output chunk}}=
 def expand(chunkName, indent):
-    chunkLines = chunks[chunkName]
-    expandedChunkLines = []
-    for line in chunkLines:
-        match = re.match("(\\s*)" + OPEN + TAGNAME + CLOSE + "\\s*$", line)
-        if match:
-            expandedChunkLines.extend(expand(match.group(2), indent + match.group(1)))
-        else:
-            expandedChunkLines.append(indent + line)
-    return expandedChunkLines
+	chunkLines = chunks[chunkName]
+	expandedChunkLines = []
+	for line in chunkLines:
+		match = re.match("(\\s*)" + OPEN + TAGNAME + CLOSE + "\\s*$", line)
+		if match:
+			expandedChunkLines.extend(expand(match.group(2), indent + match.group(1)))
+		else:
+			expandedChunkLines.append(indent + line)
+	return expandedChunkLines
 @
 ```
 
@@ -226,9 +226,9 @@ The last step is easy. We just call the recursive function and output the result
 ```python
 {{Outputting the chunks}}=
 for line in expand(outputChunkName, ""):
-    print(line.rstrip(), file=outfile)
+	print(line.rstrip(), file=outfile)
 if opts.out and opts.executable:
-    os.system("chmod +x " + opts.out)
+	os.system("chmod +x " + opts.out)
 @
 ```
 
