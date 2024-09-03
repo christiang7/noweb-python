@@ -162,7 +162,7 @@ chunks = {}
 # Regexes
 OPEN = "{{"
 CLOSE = "}}"
-TAGNAME = "([A-Za-z][-_\\.: A-Za-z0-9]+)"
+TAGNAME = "([A-Za-zäöüÄÖÜß][-_\\.: A-Za-z0-9äöüÄÖÜß]+)"
 for line in file:
 	match = re.match(OPEN + TAGNAME + CLOSE + "=", line)
 	if match:
