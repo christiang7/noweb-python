@@ -6,101 +6,17 @@ https://github.com/wware/noweb.py
 
 Using noweb for literate programming.
 
-You can generate noweb.py from README.md as follows:
+You can generate noweb.py from noweb.py.md as follows:
 
+*run-cell.sh*
 ```bash
-noweb.py -Rnoweb.py noweb.py.md > noweb.py
+./noweb.py -Rnoweb.py noweb.py.md > temp-noweb.py && cp noweb.py old-noweb.py && mv temp-noweb.py noweb.py && chmod +x noweb.py
 ```
 
-# SUMMARY OF THE PROGRAM
-
-Here's how the pieces we have discussed fit together:
-
-```python
-{{noweb.py}}=
-#! /usr/bin/env python3
-
-"""
-noweb.py
-By Jonathan Aquino (jonathan.aquino@gmail.com)
-
-This program extracts code from a literate programming document in "noweb" format.
-It was generated from noweb.py.md, itself a literate programming document.
-For more information, including the original source code and documentation,
-see http://jonaquino.blogspot.com/2010/04/nowebpy-or-worlds-first-executable-blog.html
-"""
-
-import os, sys, re, argparse
-{{Parsing the command-line arguments}}
-{{Reading in the file}}
-
-{{Recursively expanding the output chunk}}
-
-{{Outputting the chunks}}
-@
-```
-
-# BETTER PARSING OF COMMAND-LINE ARGUMENTS
-
-Now that we have a map of chunk names to the lines of each chunk, we need to know
-which chunk name the user has asked to extract. In other words, we need to parse
-the command-line arguments given to the script:
-
-```bash
-noweb.py -R hello.php hello.noweb
-```
-
-```bash
-usage: nmoweb.py [-h] --ref REF [--out OUT] filename
-
-positional arguments:
-  filename           the source file from which to extract
-
-optional arguments:
-  -h, --help         show this help message and exit
-  --ref REF, -R REF  the root chunk to be extracted
-  --out OUT, -o OUT  specify an output file
-  -x                 chmod +x that file
-```
-
-This shows our command-line arguments. So let's grab those.
-
-```python
-{{Parsing the command-line arguments}}=
-parser = argparse.ArgumentParser(
-	prog=os.path.basename(__file__),
-	formatter_class=argparse.RawDescriptionHelpFormatter,
-	description=__doc__
-)
-parser.add_argument(
-	'filename', metavar='filename', nargs=1,
-	help='the source file from which to extract')
-parser.add_argument(
-	'--ref', '-R',
-	required=True,
-	help='the root chunk to be extracted',
-)
-parser.add_argument(
-	'--out', '-o',
-	help='specify an output file',
-)
-parser.add_argument(
-	'--exectuable', '-x',
-	help='if an output file was specified, chmod +x that file',
-)
-opts = parser.parse_args()
-outputChunkName = opts.ref
-filename = opts.filename[0]
-outfile = open(opts.out, 'w') if opts.out else sys.stdout
-@
-```
-
-# ORIGINAL TEXT
+## LITERATE PROGRAMMING WITH NOWEB
 
 This executable document first appeared as a blog post on
 http://jonaquino.blogspot.com/2010/04/nowebpy-or-worlds-first-executable-blog.html
-
-
 
 I have recently been interested in the old idea of
 [literate programming](http://en.wikipedia.org/wiki/Literate_programming).
@@ -127,12 +43,12 @@ script to emulate it?
 
 And that is what we will do now.
 
-## DOWNLOAD
+### DOWNLOAD
 
 If you are just interested in the noweb.py script produced by this document,
 you can [download](http://github.com/JonathanAquino/noweb.py/raw/master/noweb.py) it from GitHub.
 
-## USAGE
+### USAGE
 
 The end goal is to produce a Python script that will take a literate program
 as input (noweb format) and extract code from it as output. For example,
@@ -141,111 +57,192 @@ as input (noweb format) and extract code from it as output. For example,
 noweb.py -Rhello.php hello.noweb > hello.php
 ```
 
-This will read in a file called hello.noweb and extract the code labelled "hello.php".
-We redirect the output into a hello.php file.
+This will read in a file called hello.noweb and extract the code labelled ``hello.php``.
+We redirect the output into a ``hello.php`` file.
 
-## READING IN THE FILE
+## SUMMARY OF THE PROGRAM
 
-In a literate program, there are named chunks of code interspersed throughout
-the document. Take the chunk of code below. The name of it is "Reading in the file".
-The chunk ends with an @ sign.
+Here's how the pieces we have discussed fit together:
 
-Let's start by reading in the file given on the command line. We'll build up
-a map called "chunks", which will contain the chunk names and the lines of each chunk.
-
+*noweb.py*
 ```python
-{{Reading in the file}}=
-file = open(filename)
-chunkName = None
-chunks = {}
-# Regexes
-OPEN = "{{"
-CLOSE = "}}"
-TAGNAME = "([A-Za-zäöüÄÖÜß][-_\\.: A-Za-z0-9äöüÄÖÜß]+)"
-for line in file:
-	match = re.match(OPEN + TAGNAME + CLOSE + "=", line)
-	if match:
-		chunkName = match.group(1)
-		if not chunkName in chunks:
-			chunks[chunkName] = []
-	else:
-		match = re.match("@", line)
-		if match:
-			chunkName = None
-		elif chunkName:
-			chunks[chunkName].append(line)
-@
+#! /usr/bin/env python3
+
+"""
+noweb.py
+By Jonathan Aquino (jonathan.aquino@gmail.com)
+
+This program extracts code from a literate programming document in "noweb" format.
+It was generated from noweb.py.md, itself a literate programming document.
+For more information, including the original source code and documentation,
+see http://jonaquino.blogspot.com/2010/04/nowebpy-or-worlds-first-executable-blog.html
+"""
+
+import os, sys, re, argparse
+#*Parsing the command-line arguments}}
+#*Reading in the file}}
+
+#*Recursively expanding the output chunk}}
+
+#*Outputting the chunks}}
 ```
 
-## PARSING THE COMMAND-LINE ARGUMENTS
+### READING IN THE FILE
+
+In a literate program, there are named chunks of code interspersed throughout
+the document, for example the chunk of code below, named "Reading in the file".
+We can start by defining some regular expressions to identify the beginnings and
+endings of chunks, and what a reference looks like. Note that the reference regex
+preserves indentation, which will then be applied to whatever we pull in for that
+chunk.
+
+If a ``*abcde*`` line is followed IMMEDIATELY by a '' ``` '' line,
+that is the start of a chunk. Any '' ``` '' block not preceded by a ``*abcde*``
+line is just free-floating code block for illustration or whatever.
+
+*Regular expressions*
+```python
+REFERENCE = r"^(\s*)#\*(.*)\}}"
+CHUNKNAME = r"^\*(.*([A-Za-z0-9äöüÄÖÜß]))\*$"
+CHUNKDELIMITER = r"^```(\w*)\s+"
+```
+
+Let's start by reading in the file given on the command line. We'll build up
+a map called ``chunks``, which will contain the chunk names and the lines of each chunk.
+
+*Reading in the file*
+```python
+file = open(filename)
+chunkName = None
+pendingChunkName = None
+chunks = {}
+#*Regular expressions}}
+
+for line in file:
+    match = re.match(CHUNKNAME, line)
+    if match:
+        chunkName = None
+        pendingChunkName = match.group(1)
+        continue
+    match = re.match(CHUNKDELIMITER, line)
+    if match:
+        if pendingChunkName and not chunkName:
+            chunkName = pendingChunkName
+            pendingChunkName = None
+            if not chunkName in chunks:
+                chunks[chunkName] = []
+        else:
+            chunkName = pendingChunkName = None
+        continue
+    if chunkName:
+        chunks[chunkName].append(line)
+```
+
+
+### RECURSIVELY EXPANDING THE OUTPUT CHUNK
+
+So far, so good. Now we need a recursive function to expand any chunks found
+in the output chunk requested by the user. Expansion of the program preserves
+indentation at each level.
+
+*Recursively expanding the output chunk*
+```python
+def expand(chunkName, indent):
+    chunkLines = chunks[chunkName]
+    expandedChunkLines = []
+    for line in chunkLines:
+        match = re.match(REFERENCE, line)
+        if match:
+            more_indent = match.group(1)  # possible future use?
+            chunkName = match.group(2)
+            expandedChunkLines.extend(expand(
+                chunkName,
+                indent + more_indent
+            ))
+        else:
+            expandedChunkLines.append(indent + line)
+    return expandedChunkLines
+```
+
+
+### OUTPUTTING THE CHUNKS
+
+The last step is easy. We just call the recursive function and output the result.
+
+*Outputting the chunks*
+```python
+for line in expand(outputChunkName, ""):
+    print(line.rstrip(), file=outfile)
+if opts.out and opts.executable:
+    os.system("chmod +x " + opts.out)
+```
+
+And we're done. We now have a tool to extract code from a literate programming document.
+Try it on this blog post!
+
+### PARSING OF COMMAND-LINE ARGUMENTS
 
 Now that we have a map of chunk names to the lines of each chunk, we need to know
 which chunk name the user has asked to extract. In other words, we need to parse
 the command-line arguments given to the script:
 
 ```bash
-noweb.py -Rhello.php hello.noweb
+noweb.py -R hello.php hello.noweb
 ```
 
-For simplicity, we'll assume that there are always two command-line arguments:
-in this example, "-Rhello.php" and "hello.noweb". So let's grab those.
+```bash
+usage: nmoweb.py [-h] --ref REF [--out OUT] filename
 
+positional arguments:
+  filename           the source file from which to extract
+
+optional arguments:
+  -h, --help         show this help message and exit
+  --ref REF, -R REF  the root chunk to be extracted
+  --out OUT, -o OUT  specify an output file (and chmod +x that file)
+  -x                 chmod +x that file
+```
+
+This shows our command-line arguments. So let's grab those.
+
+*Parsing the command-line arguments*
 ```python
-{{BOGUS Parsing the command-line arguments}}=
-filename = sys.argv[-1]
-outputChunkName = sys.argv[-2][2:]
-@
+parser = argparse.ArgumentParser(
+    prog=os.path.basename(__file__),
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    description=__doc__
+)
+parser.add_argument(
+    'filename', metavar='filename', nargs=1,
+    help='the source file from which to extract')
+parser.add_argument(
+    '--ref', '-R',
+    required=True,
+    help='the root chunk to be extracted',
+)
+parser.add_argument(
+    '--out', '-o',
+    help='specify an output file (and chmod +x that file)',
+)
+parser.add_argument(
+    '--exectuable', '-x',
+    help='if an output file was specified, chmod +x that file',
+)
+opts = parser.parse_args()
+outputChunkName = opts.ref
+filename = opts.filename[0]
+outfile = open(opts.out, 'w') if opts.out else sys.stdout
 ```
 
-## RECURSIVELY EXPANDING THE OUTPUT CHUNK
-
-So far, so good. Now we need a recursive function to expand any chunks found
-in the output chunk requested by the user. Expansion of the program preserves
-indentation at each level.
-
-```python
-{{Recursively expanding the output chunk}}=
-def expand(chunkName, indent):
-	chunkLines = chunks[chunkName]
-	expandedChunkLines = []
-	for line in chunkLines:
-		match = re.match("(\\s*)" + OPEN + TAGNAME + CLOSE + "\\s*$", line)
-		if match:
-			expandedChunkLines.extend(expand(match.group(2), indent + match.group(1)))
-		else:
-			expandedChunkLines.append(indent + line)
-	return expandedChunkLines
-@
-```
-
-## OUTPUTTING THE CHUNKS
-
-The last step is easy. We just call the recursive function and output the result.
-
-```python
-{{Outputting the chunks}}=
-for line in expand(outputChunkName, ""):
-	print(line.rstrip(), file=outfile)
-if opts.out and opts.executable:
-	os.system("chmod +x " + opts.out)
-@
-```
-
-And we're done. We now have a tool to extract code from a literate programming document.
-Try it on this blog post!
-
-
-
-# APPENDIX I: GENERATING THE SCRIPT
+## APPENDIX I: GENERATING THE SCRIPT
 
 To generate noweb.py from this document, you first need a tool to extract the
 code from it. You can use the original [noweb](http://www.cs.tufts.edu/~nr/noweb/)
 tool, but that's a bit cumbersome to install, so it's easier to use the
 Python script [noweb.py](http://github.com/JonathanAquino/noweb.py/raw/master/noweb.py).
 
-Then you can generate noweb.py from noweb.py.md as follows:
+Then you can generate ``noweb.py`` from ``noweb.py.md`` as follows:
 
 ```bash
-./noweb.py -Rnoweb.py noweb.py.md > noweb.py
+./noweb.py -Rnoweb.py noweb.py.md > noweby.py && mv noweby.py noweb.py && chmod +x noweb.py
 ```
-
