@@ -244,5 +244,5 @@ Python script [noweb.py](http://github.com/JonathanAquino/noweb.py/raw/master/no
 Then you can generate ``noweb.py`` from ``noweb.py.md`` as follows:
 
 ```bash
-./noweb.py -Rnoweb.py noweb.py.md > noweby.py && mv noweby.py noweb.py && chmod +x noweb.py
+./noweb.py -Rnoweb.py noweb.py.md > temp-noweb.py && cp noweb.py old-noweb.py && mv temp-noweb.py noweb.py && chmod +x noweb.py
 ```
