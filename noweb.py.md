@@ -8,7 +8,7 @@ Using noweb for literate programming.
 
 You can generate noweb.py from noweb.py.md as follows:
 
-*run-cell.sh*
+*make.sh*
 ```bash
 ./noweb.py -Rnoweb.py noweb.py.md > temp-noweb.py && cp noweb.py old-noweb.py && mv temp-noweb.py noweb.py && chmod +x noweb.py
 ```
